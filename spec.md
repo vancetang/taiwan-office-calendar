@@ -1,4 +1,4 @@
-﻿# System Specification: Taiwan Office Calendar
+# System Specification: Taiwan Office Calendar
 
 ## 1. 系統概述
 	taiwan-office-calendar 旨在提供一個穩定、標準化的台灣行政機關辦公日曆服務。系統核心功能為「資料標準化」與「資訊服務化」。

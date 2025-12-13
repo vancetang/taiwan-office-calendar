@@ -1,4 +1,4 @@
-﻿# Taiwan Office Calendar (台灣行政機關辦公日曆表)
+# Taiwan Office Calendar (台灣行政機關辦公日曆表)
 
 提供台灣國定假日與補班日查詢的 RESTful API 與線上月曆，資料同步自臺北市資料大平臺。本專案基於 Spring Boot 開發，自動擷取、處理並展示行政機關辦公日曆表。
 

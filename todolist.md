@@ -1,4 +1,4 @@
-﻿# Todo List - Taiwan Office Calendar
+# Todo List - Taiwan Office Calendar
 
 ## In Progress
 - [ ] 驗證新專案名稱與設定是否正確生效。
