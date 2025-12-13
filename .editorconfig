@@ -1,15 +1,38 @@
+# 這是專案的根目錄配置，停止向上搜尋
 root = true
 
+# 所有檔案的預設設定
 [*]
 charset = utf-8
-end_of_line = lf
 indent_style = space
 indent_size = 4
+end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+# 針對 XML 設定 (Maven pom.xml, Logback 等)
+[*.xml]
+indent_size = 4
+
+# 針對 YAML 設定 (application.yml, Docker Compose, CI/CD)
+[*.{yml,yaml}]
+indent_size = 2
+
+# 針對前端網頁相關檔案 (JSON, JS, TS, CSS, HTML)
+[*.{json,js,jsx,ts,tsx,css,scss,html}]
+indent_size = 2
+
+# 針對 Markdown 文件
 [*.md]
+indent_size = 2
+# Markdown 中，行尾兩個空白代表換行，因此不刪除行尾空白
 trim_trailing_whitespace = false
 
-[*.{json,yml,yaml}]
+# 針對 Shell Script
+[*.sh]
+end_of_line = lf
 indent_size = 2
+
+# 針對 Windows Batch Script
+[*.{cmd,bat}]
+end_of_line = crlf
