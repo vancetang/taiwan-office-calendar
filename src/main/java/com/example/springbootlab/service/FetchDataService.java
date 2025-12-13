@@ -382,68 +382,81 @@ public class FetchDataService {
      * @param holidays 所有節日列表
      */
     private void processRelatedHolidays(List<Holiday> holidays) {
-        // 為避免重複解析，先建立年份分組的 Map，縮小搜尋範圍 (雖然題目需求是同一年，但全 list 跑也無妨，這邊優化一下)
+        // 為避免重複解析，先建立年份分組的 Map
         Map<String, List<Holiday>> byYear = groupByYear(holidays);
 
         for (List<Holiday> yearList : byYear.values()) {
             for (Holiday target : yearList) {
-                // 判斷是否需要追蹤：補假、補上班、調整放假 或 名稱空白
-                boolean isMakeup = false;
-                if (target.getHolidayCategory() != null) {
-                    String cat = target.getHolidayCategory();
-                    if (cat.contains("補假") || cat.contains("補行上班") || cat.contains("調整放假")) {
-                        isMakeup = true;
-                    }
-                }
-                if (!isMakeup && (target.getName() == null || target.getName().trim().isEmpty())) {
-                    isMakeup = true;
-                }
-
-                // 如果不是目標類型，跳過
-                if (!isMakeup) {
+                if (!isTargetForLinking(target)) {
                     continue;
                 }
 
-                // 解析日期
-                String dStr = target.getDate();
-                if (dStr == null || dStr.length() != 8) {
+                java.util.regex.Pattern pattern = createDateSearchPattern(target.getDate());
+                if (pattern == null) {
                     continue;
                 }
-                int month = Integer.parseInt(dStr.substring(4, 6));
-                int day = Integer.parseInt(dStr.substring(6, 8));
 
-                // 建立搜尋模式 (使用 Regex 以支援更多格式，如空白、補零等)
-                String mStr = String.valueOf(month);
-                String mPad = String.format("%02d", month);
-                String mChi = toChineseNum(month);
+                findAndLinkSourceHoliday(target, yearList, pattern);
+            }
+        }
+    }
 
-                String dayStr = String.valueOf(day);
-                String dPad = String.format("%02d", day);
-                String dChi = toChineseNum(day);
+    /**
+     * 判斷是否為需要尋找關聯來源的目標節日 (如補假、補上班、名稱空白)。
+     */
+    private boolean isTargetForLinking(Holiday holiday) {
+        if (holiday.getHolidayCategory() != null) {
+            String cat = holiday.getHolidayCategory();
+            if (cat.contains("補假") || cat.contains("補行上班") || cat.contains("調整放假")) {
+                return true;
+            }
+        }
+        return holiday.getName() == null || holiday.getName().trim().isEmpty();
+    }
 
-                // 建構 Regex: (M|MM|中文) + 可能空白 + "月" + 可能空白 + (D|DD|中文) + 可能空白 + "日"
-                // 注意：toChineseNum 回傳的若是單一數字可能與 String.valueOf 相同 (雖然目前實作 10 以下是中文)，但重複在 OR 條件中無妨
-                String regex = String.format("(%s|%s|%s)\\s*月\\s*(%s|%s|%s)\\s*日", 
-                        mStr, mPad, mChi, dayStr, dPad, dChi);
-                
-                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
+    /**
+     * 建立日期搜尋的正則表達式 Pattern。
+     */
+    private java.util.regex.Pattern createDateSearchPattern(String dateStr) {
+        if (dateStr == null || dateStr.length() != 8) {
+            return null;
+        }
+        try {
+            int month = Integer.parseInt(dateStr.substring(4, 6));
+            int day = Integer.parseInt(dateStr.substring(6, 8));
 
-                // 在同一年份的其他項目中搜尋
-                for (Holiday source : yearList) {
-                    if (source == target) continue;
+            String mStr = String.valueOf(month);
+            String mPad = String.format("%02d", month);
+            String mChi = toChineseNum(month);
 
-                    String desc = source.getDescription();
-                    if (desc != null) {
-                        java.util.regex.Matcher matcher = pattern.matcher(desc);
-                        if (matcher.find()) {
-                            // 找到關聯，設定 note
-                            String sourceName = source.getName();
-                            if (sourceName != null && !sourceName.isEmpty()) {
-                                target.setNote(sourceName);
-                                // 找到一個就停止搜尋該項目的來源
-                                break;
-                            }
-                        }
+            String dayStr = String.valueOf(day);
+            String dPad = String.format("%02d", day);
+            String dChi = toChineseNum(day);
+
+            // 建構 Regex: (M|MM|中文) + 可能空白 + "月" + 可能空白 + (D|DD|中文) + 可能空白 + "日"
+            String regex = String.format("(%s|%s|%s)\\s*月\\s*(%s|%s|%s)\\s*日", 
+                    mStr, mPad, mChi, dayStr, dPad, dChi);
+            
+            return java.util.regex.Pattern.compile(regex);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 在同一年份清單中尋找符合 Pattern 的來源節日，並連結至目標節日。
+     */
+    private void findAndLinkSourceHoliday(Holiday target, List<Holiday> yearList, java.util.regex.Pattern pattern) {
+        for (Holiday source : yearList) {
+            if (source == target) continue;
+
+            String desc = source.getDescription();
+            if (desc != null) {
+                if (pattern.matcher(desc).find()) {
+                    String sourceName = source.getName();
+                    if (sourceName != null && !sourceName.isEmpty()) {
+                        target.setNote(sourceName);
+                        return; // 找到一個就停止
                     }
                 }
             }
