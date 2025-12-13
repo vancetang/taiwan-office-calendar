@@ -26,8 +26,17 @@ mvn spring-boot:run
 
 ### 2. 執行資料更新 (任務模式)
 僅執行資料下載與處理任務，不啟動 Web Server (適合 CI/CD)。
+
+#### 抓取並處理 (Fetch & Process)
+從來源下載最新 CSV 並進行處理：
 ```powershell
 mvn spring-boot:run "-Dspring-boot.run.arguments=--job=fetch"
+```
+
+#### 僅處理 (Process Only)
+僅重新解析現有的 JSON 檔案 (例如修復關聯資料邏輯)，不重新下載：
+```powershell
+mvn spring-boot:run "-Dspring-boot.run.arguments=--job=process"
 ```
 
 ## 資料來源
