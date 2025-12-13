@@ -1,5 +1,7 @@
 # Taiwan Office Calendar (台灣行政機關辦公日曆表)
 
+[![CodeFactor](https://www.codefactor.io/repository/github/vancetang/taiwan-office-calendar/badge)](https://www.codefactor.io/repository/github/vancetang/taiwan-office-calendar) ![Spring Boot](https://img.shields.io/badge/dynamic/xml?url=https://raw.githubusercontent.com/vancetang/taiwan-office-calendar/main/pom.xml&query=//*[local-name()='parent']/*[local-name()='version']&label=Spring%20Boot&color=brightgreen) ![Java Version](https://img.shields.io/badge/dynamic/xml?url=https://raw.githubusercontent.com/vancetang/taiwan-office-calendar/main/pom.xml&query=//*[local-name()='properties']/*[local-name()='java.version']&label=Java&color=ED8B00&logo=openjdk&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Enabled-blue) [![Star History](https://img.shields.io/badge/Star%20History-Chart-orange)](https://star-history.com/#vancetang/taiwan-office-calendar&Date)
+
 提供台灣國定假日與補班日查詢的 RESTful API 與線上月曆，資料同步自臺北市資料大平臺。本專案基於 Spring Boot 開發，自動擷取、處理並展示行政機關辦公日曆表。
 
 ## 主要功能
