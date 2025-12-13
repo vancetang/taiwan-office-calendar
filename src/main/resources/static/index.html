@@ -1,0 +1,1071 @@
+﻿<!DOCTYPE html>
+<!--
+  行政機關辦公日曆表 - 月曆版首頁 (index.html)
+  功能：
+  1. 提供類似 Google Calendar 的月曆視圖。
+  2. 整合「社畜儀表板」，顯示連假倒數、年度進度與即時停班停課資訊。
+  3. 支援年份切換與詳細/精簡版連結。
+-->
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <title>行政機關辦公日曆表</title>
+    <!-- 
+      樣式定義區 
+      定義了全站主題顏色 (CSS Variables) 與各區塊樣式。
+      包含月曆網格 (Grid Layout)、Dashboard 卡片與響應式設計。
+    -->
+    <style>
+      :root {
+        /* 主題色系定義 */
+        --primary: #1a73e8;
+        --primary-light: #e8f0fe;
+        --holiday: #c62828;
+        --holiday-bg: #ffebee;
+        --workday: #2e7d32;
+        --workday-bg: #e8f5e9;
+        --border: #e0e0e0;
+        --text: #424242;
+        --text-light: #757575;
+        --weekend: #fafafa;
+        --weekend-tag: #78909c;
+        --weekend-tag-bg: #eceff1;
+        --adjusted: #6a1b9a;
+        --adjusted-bg: #f3e5f5;
+        --special: #ef6c00;
+        --special-bg: #fff3e0;
+        --today: #1565c0;
+        --today-bg: #e3f2fd;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Google Sans', 'Segoe UI', Arial, sans-serif;
+        background: #fff;
+        color: var(--text);
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      /* 頁首標題與導航 */
+      .header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .header h1 {
+        font-size: 22px;
+        font-weight: 400;
+        color: var(--text);
+        flex: 1;
+      }
+      .header h1 span {
+        font-size: 14px;
+        color: var(--primary);
+        background: var(--primary-light);
+        padding: 4px 10px;
+        border-radius: 12px;
+        margin-left: 8px;
+      }
+      /* 控制按鈕區 (上下月切換) */
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .nav-btn {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--text);
+        transition: background 0.2s;
+      }
+      .nav-btn:hover {
+        background: var(--weekend);
+      }
+      .nav-btn.primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+      .nav-btn.primary:hover {
+        background: #1557b0;
+      }
+      select {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        background: #fff;
+      }
+      /* 右上角切換連結 */
+      .nav-links {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .nav-link {
+        text-decoration: none;
+        color: var(--primary);
+        font-size: 14px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+      .nav-link:hover {
+        background: var(--primary-light);
+      }
+      /* 月曆主體 */
+      .calendar {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        background: var(--weekend);
+        border-bottom: 1px solid var(--border);
+      }
+      .calendar-header div {
+        padding: 12px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-light);
+        text-transform: uppercase;
+      }
+      .calendar-header div:first-child,
+      .calendar-header div:last-child {
+        color: var(--holiday);
+      }
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        height: auto; /* 改為自動高度，由內容撐開但設最小高度 */
+        min-height: 480px;
+      }
+      .calendar-grid.weeks-5 {
+        grid-template-rows: repeat(5, 1fr);
+      }
+      .calendar-grid.weeks-6 {
+        grid-template-rows: repeat(6, 1fr);
+      }
+      .day-cell {
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 4px;
+        position: relative;
+        cursor: default;
+        overflow: hidden;
+        min-height: 100px; /* 設定最小高度 */
+      }
+      .day-cell:nth-child(7n) {
+        border-right: none;
+      }
+      .day-cell.other-month {
+        background: #f5f5f5;
+      }
+      .day-cell.other-month .day-number {
+        color: #ccc;
+      }
+      .day-cell.weekend {
+        background: var(--weekend);
+      }
+      .day-cell.today .day-number {
+        background: var(--today);
+        color: #fff;
+      }
+      .day-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 50%;
+        margin-bottom: 2px;
+      }
+      .day-events {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .event {
+        padding: 2px 4px;
+        border-radius: 3px;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      /* 事件類型樣式 */
+      .event.holiday {
+        background: var(--holiday-bg);
+        color: var(--holiday);
+      }
+      .event.workday {
+        background: var(--workday-bg);
+        color: var(--workday);
+      }
+      .event.weekend {
+        background: transparent;
+        color: #9e9e9e;
+        font-weight: 400;
+      }
+      .event.weekend-special {
+        background: var(--special-bg);
+        color: var(--special);
+        border: 1px dashed var(--special);
+        font-weight: 500;
+      }
+      .event.adjusted {
+        background: var(--adjusted-bg);
+        color: var(--adjusted);
+      }
+      .event.special {
+        background: var(--special-bg);
+        color: var(--special);
+      }
+      /* 圖例說明 */
+      .legend {
+        display: flex;
+        gap: 16px;
+        margin-top: 16px;
+        padding: 12px;
+        background: var(--weekend);
+        border-radius: 8px;
+        flex-wrap: wrap;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-light);
+      }
+      .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+      }
+      .footer {
+        margin-top: 16px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--text-light);
+      }
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        color: var(--text-light);
+      }
+      /* Dashboard Styles (儀表板) */
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 8px; /* 12px -> 8px */
+        margin-bottom: 8px; /* 12px -> 8px */
+        animation: fadeIn 0.5s ease-in;
+      }
+      .dashboard-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 12px; /* 12px -> 8px 12px */
+        display: flex;
+        align-items: center; /* 改為 center 讓內容垂直置中 */
+        gap: 10px; /* 12px -> 10px */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s;
+        min-height: 60px; /* 設定一個較小的最小高度 */
+      }
+      .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .card-icon {
+        font-size: 18px; /* 24px -> 18px */
+        background: var(--weekend);
+        width: 36px; /* 48px -> 36px */
+        height: 36px; /* 48px -> 36px */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        flex-shrink: 0; /* 防止 icon 被壓縮 */
+      }
+      .card-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .card-title {
+        font-size: 11px; /* 14px -> 11px */
+        color: var(--text-light);
+        margin-bottom: 2px;
+        font-weight: 500;
+        line-height: 1;
+      }
+      .card-desc {
+        font-size: 13px; /* 16px -> 13px */
+        color: var(--text);
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .card-desc span.highlight {
+        color: var(--primary);
+        font-size: 15px; /* 20px -> 15px */
+        margin: 0 2px;
+      }
+      .progress-container {
+        height: 4px; /* 8px -> 4px */
+        background: var(--weekend);
+        border-radius: 2px;
+        overflow: hidden;
+        margin: 4px 0;
+      }
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), #4285f4);
+        border-radius: 4px;
+        transition: width 1s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (max-width: 600px) {
+        .dashboard {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 768px) {
+        .day-cell {
+          min-height: 60px;
+        }
+        .day-number {
+          width: 24px;
+          height: 24px;
+          font-size: 12px;
+        }
+        .header h1 {
+          font-size: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Dashboard Area (社畜儀表板) -->
+      <div class="dashboard" id="dashboard" style="display: none">
+        <!-- 卡片 1: 下一個連假倒數 -->
+        <div class="dashboard-card holiday-countdown">
+          <div class="card-icon">🎯</div>
+          <div class="card-content">
+            <div class="card-title">下一個目標</div>
+            <div class="card-desc" id="nextHolidayContent">載入中...</div>
+          </div>
+        </div>
+        <!-- 卡片 2: 年度進度條 -->
+        <div class="dashboard-card year-progress">
+          <div class="card-icon">⏳</div>
+          <div class="card-content">
+            <div class="card-title" id="yearProgressTitle">2025年 進度條</div>
+            <div class="progress-container">
+              <div
+                class="progress-bar"
+                id="yearProgressBar"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div
+              class="card-desc"
+              id="yearProgressDesc"
+              style="
+                font-size: 12px;
+                font-weight: normal;
+                color: var(--text-light);
+              "
+            >
+              ...
+            </div>
+          </div>
+        </div>
+        <!-- 卡片 3: 颱風假查詢 (點擊觸發) -->
+        <div
+          class="dashboard-card typhoon-check"
+          style="cursor: pointer"
+          onclick="checkTyphoonViaProxy()"
+        >
+          <div class="card-icon" style="background: #fff3e0; color: #ef6c00">
+            🌀
+          </div>
+          <div class="card-content">
+            <div class="card-title">即時停班停課</div>
+            <div class="card-desc" id="typhoonContent">
+              <span style="font-size: 14px; color: var(--primary)"
+                >點擊查詢台北市狀況</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Header: 標題與導航 -->
+      <div class="header">
+        <h1>📅 行政機關辦公日曆表<span>月曆版</span></h1>
+        <div class="controls">
+          <button class="nav-btn" id="prevMonth">◀ 上月</button>
+          <select id="yearSelect"></select>
+          <select id="monthSelect"></select>
+          <button class="nav-btn" id="nextMonth">下月 ▶</button>
+          <button class="nav-btn primary" id="todayBtn">今天</button>
+        </div>
+        <div class="nav-links">
+          <a href="simple.html" class="nav-link" id="linkSimple">📋 精簡版</a>
+          <a href="detail.html" class="nav-link" id="linkDetail">📊 詳細版</a>
+        </div>
+      </div>
+      
+      <!-- Calendar Grid: 月曆主體區 -->
+      <div class="calendar">
+        <div class="calendar-header">
+          <div>日</div>
+          <div>一</div>
+          <div>二</div>
+          <div>三</div>
+          <div>四</div>
+          <div>五</div>
+          <div>六</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+          <div class="loading">載入中...</div>
+        </div>
+      </div>
+
+      <!-- Legend: 圖例說明 -->
+      <div class="legend">
+        <div class="legend-item">
+          <div
+            class="legend-color"
+            style="
+              background: var(--holiday-bg);
+              border: 1px solid var(--holiday);
+            "
+          ></div>
+          國定假日
+        </div>
+        <div class="legend-item">
+          <div
+            class="legend-color"
+            style="
+              background: var(--adjusted-bg);
+              border: 1px solid var(--adjusted);
+            "
+          ></div>
+          調整放假
+        </div>
+        <div class="legend-item">
+          <div
+            class="legend-color"
+            style="
+              background: var(--workday-bg);
+              border: 1px solid var(--workday);
+            "
+          ></div>
+          補班日
+        </div>
+        <div class="legend-item">
+          <div
+            class="legend-color"
+            style="
+              background: var(--special-bg);
+              border: 1px solid var(--special);
+            "
+          ></div>
+          特殊節日
+        </div>
+        <div class="legend-item" style="margin-left: auto; font-size: 14px; color: var(--text);">
+          資料來源：臺北市資料大平臺
+        </div>
+      </div>
+    </div>
+
+    <!-- 應用程式邏輯 -->
+    <script>
+      // 資料路徑設定
+      const DATA_PATH = 'opendata/holiday';
+      
+      // DOM 元素參考
+      const yearSelect = document.getElementById('yearSelect');
+      const monthSelect = document.getElementById('monthSelect');
+      const calendarGrid = document.getElementById('calendarGrid');
+      
+      // 狀態變數
+      let currentYear,
+        currentMonth,
+        holidayData = {}, // 快取已載入的假日資料
+        availableYears = []; // 可用的年份列表
+
+      // 初始化月份選單 (1-12月)
+      for (let m = 1; m <= 12; m++) {
+        monthSelect.innerHTML += `<option value="${m}">${m}月</option>`;
+      }
+
+      /**
+       * 應用程式初始化函式
+       * 1. 取得現在日期
+       * 2. 載入 availableYears 列表
+       * 3. 設定 UI 初始狀態
+       * 4. 載入所需年份資料並渲染
+       */
+      async function init() {
+        const today = new Date();
+        currentYear = today.getFullYear();
+        currentMonth = today.getMonth() + 1;
+        try {
+          // 加上時間戳記避免快取
+          const res = await fetch(`${DATA_PATH}/years.json?t=${new Date().getTime()}`);
+          availableYears = await res.json();
+          yearSelect.innerHTML = availableYears
+            .map((y) => `<option value="${y}">${y}</option>`)
+            .join('');
+
+          // 確保載入資料邏輯
+          // 1. 用於顯示月曆的年份 (如果當前年份不在資料庫，預設顯示最新或最舊)
+          let calendarYear = currentYear;
+          if (!availableYears.includes(String(calendarYear))) {
+            calendarYear = parseInt(availableYears[0]);
+          }
+
+          // 設定 UI
+          yearSelect.value = calendarYear;
+          monthSelect.value = currentMonth;
+
+          // 更新全域變數以供 renderCalendar 使用
+          currentYear = calendarYear;
+          updateLinks();
+
+          // 2. 載入資料
+          // 載入月曆顯示年份
+          await loadYear(currentYear);
+
+          // 載入真實當前年份與明年 (為了 Dashboard 計算倒數)
+          const realYear = today.getFullYear();
+          if (realYear !== currentYear) await loadYear(realYear);
+          if (availableYears.includes(String(realYear + 1))) {
+            await loadYear(realYear + 1);
+          }
+
+          renderCalendar();
+          renderDashboard();
+          document.getElementById('dashboard').style.display = 'grid';
+        } catch (e) {
+          calendarGrid.innerHTML = `<div class="loading">載入失敗: ${e.message}</div>`;
+          console.error(e);
+        }
+      }
+
+      /**
+       * 渲染 Dashboard (社畜儀表板)
+       * 計算並顯示下一個連假與年度進度條
+       */
+      function renderDashboard() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        // 格式化為 YYYYMMDD
+        const todayStr = `${today.getFullYear()}${String(
+          today.getMonth() + 1
+        ).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+
+        // --- 1. 下一個連假邏輯 ---
+        let nextHoliday = null;
+        // 搜尋今年和明年
+        const searchYears = [today.getFullYear(), today.getFullYear() + 1];
+
+        // 尋找候選人
+        for (const year of searchYears) {
+          const data = holidayData[year];
+          if (!data) continue;
+
+          for (const h of data) {
+            // 過濾掉過去的日期
+            if (h.date < todayStr) continue;
+
+            // 必須是放假日 (holiday: true)
+            if (!h.holiday) continue;
+
+            // 過濾掉單純的週末 (除非是特別指定的節日)
+            const category = (h.holidayCategory || '').trim();
+            if (category === '星期六、星期日') continue;
+
+            // 找到第一個符合的
+            nextHoliday = h;
+            break;
+          }
+          if (nextHoliday) break;
+        }
+
+        const holidayTitle = document.getElementById('nextHolidayContent');
+
+        if (nextHoliday) {
+          const targetDate = new Date(
+            parseInt(nextHoliday.date.substring(0, 4)),
+            parseInt(nextHoliday.date.substring(4, 6)) - 1,
+            parseInt(nextHoliday.date.substring(6, 8))
+          );
+
+          const diffTime = targetDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          let desc = '';
+          const name = nextHoliday.name || '放假';
+
+          if (diffDays <= 0) {
+            desc = `正在放假中！<br>享受 <span class="highlight">${name}</span> 吧！`;
+          } else {
+            desc = `距離 <span class="highlight">${name}</span><br>還有 <span class="highlight">${diffDays}</span> 天`;
+          }
+          holidayTitle.innerHTML = desc;
+        } else {
+          holidayTitle.innerHTML =
+            '資料庫中暫無下一個假期...<br>先專心工作吧！';
+        }
+
+        // --- 2. 年度進度條邏輯 ---
+        const startOfYear = new Date(today.getFullYear(), 0, 1);
+        const endOfYear = new Date(today.getFullYear() + 1, 0, 1);
+        const totalMillis = endOfYear - startOfYear;
+        const elapsedMillis = today - startOfYear; // 現在距離年初過了多久
+        let progress = (elapsedMillis / totalMillis) * 100;
+        progress = Math.max(0, Math.min(100, progress)); // 限制 0-100
+
+        document.getElementById(
+          'yearProgressTitle'
+        ).innerText = `${today.getFullYear()}年 進度條`;
+        document.getElementById('yearProgressBar').style.width = `${progress}%`;
+
+        let progressText = '';
+        if (progress < 15) progressText = '新的一年，請多指教';
+        else if (progress < 40) progressText = '努力搬磚中...';
+        else if (progress < 60) progressText = '今年過一半囉！';
+        else if (progress < 85) progressText = '撐住！年終在向你招手';
+        else progressText = '最後衝刺！';
+
+        document.getElementById(
+          'yearProgressDesc'
+        ).innerText = `${progress.toFixed(1)}% - ${progressText}`;
+      }
+
+      /**
+       * 透過 Proxy 檢查 NCDR 颱風假資訊 (GitHub Pages 適用)
+       * 使用 allorigins.win 作為 CORS Proxy 繞過瀏覽器限制。
+       * 
+       * 注意：此方法僅供靜態網站展示用，正式環境應使用後端 API。
+       */
+      async function checkTyphoonViaProxy() {
+        const content = document.getElementById('typhoonContent');
+        content.innerHTML =
+          '<span style="font-size: 14px; color: var(--text-light);">查詢中(Proxy)...</span>';
+
+        const targetUrl =
+          'https://alerts.ncdr.nat.gov.tw/JSONAtomFeed.ashx?AlertType=33';
+        const proxyUrl =
+          'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
+
+        try {
+          const res = await fetch(proxyUrl);
+          if (!res.ok) throw new Error('Proxy Fetch Error');
+
+          const rootData = await res.json();
+          // NCDR 原始結構通常是 { entry: [...] } 或 { entry: {...} } (單筆時)
+          // 需做正規化處理
+          let entries = [];
+          if (rootData && rootData.entry) {
+            if (Array.isArray(rootData.entry)) {
+              entries = rootData.entry;
+            } else {
+              entries = [rootData.entry];
+            }
+          }
+
+          // 前端重現後端過濾邏輯：鎖定台北市全區
+          const targetCity1 = '臺北市';
+          const targetCity2 = '台北市';
+
+          const filtered = entries.filter((entry) => {
+            if (!entry.summary || !entry.summary['#text']) return false;
+            const text = entry.summary['#text'];
+
+            // 1. 檢查是否包含目標城市
+            const hasCityName =
+              text.includes(targetCity1) || text.includes(targetCity2);
+            if (!hasCityName) return false;
+
+            // 2. 全區判斷邏輯 (檢查 "臺北市:" 或 "臺北市：")
+            const isAllArea1 =
+              text.includes(targetCity1 + ':') ||
+              text.includes(targetCity1 + '：');
+            const isAllArea2 =
+              text.includes(targetCity2 + ':') ||
+              text.includes(targetCity2 + '：');
+
+            return isAllArea1 || isAllArea2;
+          });
+
+          if (filtered.length > 0) {
+            // 有資料，顯示第一筆
+            const summary = filtered[0].summary['#text'];
+            let cleanText = summary
+              .replace(/\[.*?\]/g, '')
+              .replace(/行政院人事行政總處.*/, '');
+            content.innerHTML = `<span style="font-size: 13px; color: #c62828; font-weight: bold;">${cleanText}</span>`;
+          } else {
+            content.innerHTML =
+              '<span style="font-size: 14px; color: var(--workday);">目前無停班課資訊</span>';
+          }
+        } catch (e) {
+          console.error(e);
+          content.innerHTML =
+            '<span style="font-size: 12px; color: var(--text-light);">連線失敗</span>';
+        }
+      }
+
+      /**
+       * 透過後端 API 檢查颱風假資訊 (Server Mode 適用)
+       * (目前未在 UI 中直接呼叫，保留供參考)
+       */
+      async function checkTyphoon() {
+        const content = document.getElementById('typhoonContent');
+        content.innerHTML =
+          '<span style="font-size: 14px; color: var(--text-light);">查詢中...</span>';
+
+        try {
+          // 注意：這裡假設後端 API 已部署在 /api/holidays/realtime
+          // 若是靜態頁面直接開啟，此功能會因為跨域或找不到 API 而失敗
+          const res = await fetch('/api/holidays/realtime');
+          if (!res.ok) throw new Error('API Error');
+
+          const data = await res.json();
+          if (data && data.length > 0) {
+            // 有資料，顯示第一筆的 summary
+            const summary = data[0].summary['#text'];
+            // 簡化顯示：移除 [停班停課通知] 等前綴，只顯示重點
+            let cleanText = summary
+              .replace(/\[.*?\]/g, '')
+              .replace(/行政院人事行政總處.*/, '');
+            content.innerHTML = `<span style="font-size: 13px; color: #c62828; font-weight: bold;">${cleanText}</span>`;
+          } else {
+            content.innerHTML =
+              '<span style="font-size: 14px; color: var(--workday);">目前無停班課資訊</span>';
+          }
+        } catch (e) {
+          console.error(e);
+          content.innerHTML =
+            '<span style="font-size: 12px; color: var(--text-light);">無法連線至伺服器</span>';
+        }
+      }
+
+      /**
+       * 載入特定年份的資料
+       * @param {number} year - 目標年份
+       */
+      async function loadYear(year) {
+        if (holidayData[year]) return;
+        try {
+          const res = await fetch(`${DATA_PATH}/${year}.json?t=${new Date().getTime()}`);
+          if (res.ok) holidayData[year] = await res.json();
+        } catch (e) {
+          console.warn(`無法載入 ${year} 年資料`);
+        }
+      }
+
+      /**
+       * 更新跳轉連結 (將當前選擇的年份帶入 URL 參數)
+       */
+      function updateLinks() {
+        document.getElementById(
+          'linkSimple'
+        ).href = `simple.html?year=${currentYear}`;
+        document.getElementById(
+          'linkDetail'
+        ).href = `detail.html?year=${currentYear}`;
+      }
+
+      /**
+       * 取得事件顯示文字（套用精簡版邏輯）
+       * 負責根據假日類別判斷顯示名稱與樣式類型
+       * 
+       * @param {Object} item - 假日資料物件
+       * @param {boolean} isWeekend - 是否為週末
+       * @returns {Object} { display: 顯示文字, tooltip: 提示文字, type: 類型 }
+       */
+      function getEventDescription(item, isWeekend) {
+        const isHoliday = item.holiday;
+        const name = (item.name || '').trim();
+        const desc = (item.description || '').trim();
+        const category = (item.holidayCategory || '').trim();
+        let display = '';
+        let type = 'holiday'; // holiday, workday, special
+
+        if (!isHoliday || category === '補行上班日') {
+          // 補班日
+          display = name ? `補班(${name})` : '補班';
+          type = 'workday';
+        } else if (category === '星期六、星期日') {
+          // 周休
+          if (name || desc) {
+            display = name ? `周休(${name})` : '周休(詳)';
+            type = 'weekend-special';
+          } else {
+            display = '周休';
+            type = 'weekend';
+          }
+        } else if (category === '調整放假日') {
+          // 調整放假（如小年夜）
+          display = name || '調整放假';
+          type = 'adjusted';
+        } else if (category === '放假之紀念日及節日') {
+          // 國定假日
+          display = name || '國定假日';
+          type = 'holiday';
+        } else if (name) {
+          // 其他有名稱的節日（如節氣）
+          display = name;
+          type = 'special';
+        } else {
+          // 其他補假
+          display = '補假';
+          type = 'holiday';
+        }
+
+        const note = (item.note || '').trim();
+        let tooltip = desc || `${category}${name ? ': ' + name : ''}`;
+        if (note) {
+            tooltip += ` (${note})`;
+        }
+
+        return {
+          display,
+          tooltip,
+          type,
+        };
+      }
+
+      /**
+       * 渲染月曆核心邏輯
+       * 計算每月天數、補白、填入日期與事件
+       */
+      function renderCalendar() {
+        const firstDay = new Date(currentYear, currentMonth - 1, 1);
+        const lastDay = new Date(currentYear, currentMonth, 0);
+        // 週日開始: getDay() 週日=0, 週一=1, ..., 週六=6
+        const startDay = firstDay.getDay();
+        const daysInMonth = lastDay.getDate();
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}/${String(
+          today.getMonth() + 1
+        ).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+
+        const yearData = holidayData[currentYear] || [];
+        const dateMap = {};
+        yearData.forEach((h) => {
+          dateMap[h.date] = h;
+        });
+
+        let html = '';
+        // 上月補位 (填補第一週前面的空白)
+        const prevMonth = new Date(currentYear, currentMonth - 1, 0);
+        for (let i = startDay - 1; i >= 0; i--) {
+          const d = prevMonth.getDate() - i;
+          html += `<div class="day-cell other-month"><span class="day-number">${d}</span></div>`;
+        }
+        // 當月日期生成
+        for (let d = 1; d <= daysInMonth; d++) {
+          // JSON 資料日期格式為 YYYYMMDD (如 20250127)
+          const dateKey = `${currentYear}${String(currentMonth).padStart(
+            2,
+            '0'
+          )}${String(d).padStart(2, '0')}`;
+          // 顯示用格式 YYYY/MM/DD
+          const dateDisplay = `${currentYear}/${String(currentMonth).padStart(
+            2,
+            '0'
+          )}/${String(d).padStart(2, '0')}`;
+          const dayOfWeek = new Date(currentYear, currentMonth - 1, d).getDay();
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+          const isToday = dateDisplay === todayStr;
+          const h = dateMap[dateKey];
+
+          let classes = 'day-cell';
+          if (isWeekend) classes += ' weekend';
+          if (isToday) classes += ' today';
+
+          let events = '';
+          if (h) {
+            // 套用精簡版邏輯：顯示周休、補班等資訊
+            const eventInfo = getEventDescription(h, isWeekend);
+            // 根據類型設定不同的樣式 class
+            const eventClass = `event ${eventInfo.type}`;
+            events = `<div class="${eventClass}" title="${eventInfo.tooltip}">${eventInfo.display}</div>`;
+          }
+
+          html += `<div class="${classes}"><span class="day-number">${d}</span><div class="day-events">${events}</div></div>`;
+        }
+        // 計算需要幾週以決定網格高度
+        const totalCells = startDay + daysInMonth;
+        const weeksNeeded = Math.ceil(totalCells / 7);
+        const targetCells = weeksNeeded * 7;
+        // 下月補位 - 填滿該週數所需的格子
+        const remaining = targetCells - totalCells;
+        for (let d = 1; d <= remaining; d++) {
+          html += `<div class="day-cell other-month"><span class="day-number">${d}</span></div>`;
+        }
+        // 設定週數 class 以調整格子高度 (CSS Grid)
+        calendarGrid.className = `calendar-grid weeks-${weeksNeeded}`;
+        calendarGrid.innerHTML = html;
+      }
+
+      /**
+       * 切換月份
+       * @param {number} delta - 切換量 (+1 或 -1)
+       */
+      async function changeMonth(delta) {
+        currentMonth += delta;
+        if (currentMonth > 12) {
+          currentMonth = 1;
+          currentYear++;
+        } else if (currentMonth < 1) {
+          currentMonth = 12;
+          currentYear--;
+        }
+        // 若切換後的年份無資料，跳轉至邊界年份
+        if (!availableYears.includes(String(currentYear))) {
+          currentYear = parseInt(
+            availableYears[delta > 0 ? 0 : availableYears.length - 1]
+          );
+          currentMonth = delta > 0 ? 1 : 12;
+        }
+        yearSelect.value = currentYear;
+        monthSelect.value = currentMonth;
+        updateLinks();
+        await loadYear(currentYear);
+        renderCalendar();
+      }
+
+      // 事件綁定
+      document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+      document.getElementById('nextMonth').onclick = () => changeMonth(1);
+      document.getElementById('todayBtn').onclick = async () => {
+        const today = new Date();
+        currentYear = today.getFullYear();
+        currentMonth = today.getMonth() + 1;
+        if (!availableYears.includes(String(currentYear))) {
+          currentYear = parseInt(availableYears[0]);
+        }
+        yearSelect.value = currentYear;
+        monthSelect.value = currentMonth;
+        updateLinks();
+        await loadYear(currentYear);
+        renderCalendar();
+      };
+      yearSelect.onchange = async () => {
+        currentYear = parseInt(yearSelect.value);
+        updateLinks();
+        await loadYear(currentYear);
+        renderCalendar();
+      };
+      monthSelect.onchange = () => {
+        currentMonth = parseInt(monthSelect.value);
+        renderCalendar();
+      };
+
+      // 啟動程式
+      init();
+    </script>
+  </body>
+  <!-- GitHub Corner 圖示 -->
+  <a
+    href="https://github.com/vancetang/spring-boot-lab"
+    class="github-corner"
+    aria-label="View source on GitHub"
+    ><svg
+      width="80"
+      height="80"
+      viewBox="0 0 250 250"
+      style="
+        fill: #70b7fd;
+        color: #fff;
+        position: absolute;
+        top: 0;
+        border: 0;
+        right: 0;
+      "
+      aria-hidden="true"
+    >
+      <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z" />
+      <path
+        d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+        fill="currentColor"
+        style="transform-origin: 130px 106px"
+        class="octo-arm"
+      />
+      <path
+        d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+        fill="currentColor"
+        class="octo-body"
+      /></svg></a
+  ><style>
+    .github-corner:hover .octo-arm {
+      animation: octocat-wave 560ms ease-in-out;
+    }
+    @keyframes octocat-wave {
+      0%,
+      100% {
+        transform: rotate(0);
+      }
+      20%,
+      60% {
+        transform: rotate(-25deg);
+      }
+      40%,
+      80% {
+        transform: rotate(10deg);
+      }
+    }
+    @media (max-width: 500px) {
+      .github-corner:hover .octo-arm {
+        animation: none;
+      }
+      .github-corner .octo-arm {
+        animation: octocat-wave 560ms ease-in-out;
+      }
+    }
+  </style>
+</html>

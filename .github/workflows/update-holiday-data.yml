@@ -1,0 +1,61 @@
+name: Update Holiday Data
+
+on:
+  # 允許在 GitHub Actions 介面手動觸發
+  workflow_dispatch:
+
+  # 排程執行：每月 15 號 00:00 UTC (台灣時間 08:00)
+  schedule:
+    - cron: "0 0 15 * *"
+
+# 給予 workflow 寫入儲存庫的權限 (為了 git push)
+permissions:
+  contents: write
+
+jobs:
+  fetch-and-update:
+    runs-on: ubuntu-latest
+
+    #在此設定 Git Committer 的身分
+    env:
+      GIT_USER_NAME: "github-actions[bot]"
+      GIT_USER_EMAIL: "github-actions[bot]@users.noreply.github.com"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Run Fetch Data Job
+        # 執行 Task Mode，並抑制過多輸出 (-q)
+        run: mvn spring-boot:run "-Dspring-boot.run.arguments=--job=fetch" -q
+
+      - name: Check for changes and Commit
+        run: |
+          # 檢查 src/main/resources/static/opendata/holiday/ 目錄下是否有變更
+          if [ -z "$(git status --porcelain src/main/resources/static/opendata/holiday/)" ]; then
+            echo "✨ 未偵測到變更。跳過提交。"
+            exit 0
+          fi
+
+          echo "📝 偵測到變更。正在設定 Git..."
+          git config --global user.name "${{ env.GIT_USER_NAME }}"
+          git config --global user.email "${{ env.GIT_USER_EMAIL }}"
+
+          echo "➕ 正在暫存檔案..."
+          git add src/main/resources/static/opendata/holiday/*.json
+
+          echo "💾 正在提交..."
+          # 取得當前日期
+          TODAY=$(date +'%Y-%m-%d')
+          git commit -m "chore(data): auto-update holiday data on $TODAY"
+
+          echo "⬆️ 正在推送至儲存庫..."
+          git push
+          echo "🚀 變更已成功推送"

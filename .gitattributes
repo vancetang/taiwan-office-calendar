@@ -1,0 +1,57 @@
+# 預設所有檔案不處理行結尾（視為二進位），避免誤處理
+* -text
+
+# 程式碼檔案，使用 LF 行結尾（Unix 風格，跨平台一致性）
+*.java       text eol=lf
+*.jsp        text eol=lf
+*.js         text eol=lf
+*.py         text eol=lf
+
+# 標記與前端相關
+*.css        text eol=lf
+*.scss       text eol=lf
+*.less       text eol=lf
+*.html       text eol=lf
+*.xhtml      text eol=lf
+*.xml        text eol=lf
+*.svg        text eol=lf
+
+# 資源檔案和配置檔案，使用 LF 行結尾
+*.properties text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.xml        text eol=lf
+*.json       text eol=lf
+*.jsonc      text eol=lf
+*.toml       text eol=lf
+*.ini        text eol=lf
+*.cfg        text eol=lf
+*.env        text eol=lf
+*.rc         text eol=lf
+Makefile     text eol=lf
+Dockerfile   text eol=lf
+
+# 資料庫相關，使用 LF 行結尾
+*.sql        text eol=lf
+*.ddl        text eol=lf
+
+# Shell 腳本，使用 LF 行結尾（Unix 環境執行）
+*.sh         text eol=lf
+
+# Windows 批次檔案，使用 CRLF 行結尾（Windows 環境執行）
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+*.ps1        text eol=crlf
+
+# 文件檔案，使用 LF 行結尾（跨平台一致性）
+*.md         text eol=lf diff=markdown
+*.txt        text eol=lf
+
+# Git 相關檔案，使用 LF 行結尾
+.gitattributes text eol=lf
+.gitignore     text eol=lf
+
+# --- 降噪：縮小無意義 diff ---
+*.min.js  -diff
+*.min.css -diff
+*.map     -diff

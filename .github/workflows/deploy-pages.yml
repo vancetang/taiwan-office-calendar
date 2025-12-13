@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages
+
+on:
+    # 允許在 GitHub Actions 介面手動觸發
+    workflow_dispatch:
+
+    # 自動部署 (僅 docs/ 目錄)
+    push:
+        branches:
+            - main
+        paths:
+            - "src/main/resources/static/**"
+
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+concurrency:
+    group: "github-pages-deploy"
+    cancel-in-progress: false # 等待前次作業完成
+
+jobs:
+    deploy:
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        runs-on: ubuntu-latest
+        steps:
+            # 第一步：檢出原始碼
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            # 第二步：配置 GitHub Pages 環境
+            - name: Setup Pages
+              uses: actions/configure-pages@v5
+
+            # 第三步：上傳 Artifact
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: "./src/main/resources/static" # 指定 static 資料夾為發佈目錄
+
+            # 第四步：部署到 GitHub Pages
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4
