@@ -231,26 +231,13 @@
       // 事件綁定
       yearSelect.addEventListener("change", loadData);
       downloadBtn.addEventListener("click", downloadCSV);
-      
-      // 回到頂端功能
-      const backToTopBtn = document.getElementById("backToTop");
-      window.addEventListener("scroll", () => {
-        if (window.scrollY > 100) {
-          backToTopBtn.classList.add("show");
-        } else {
-          backToTopBtn.classList.remove("show");
-        }
-      });
-      backToTopBtn.addEventListener("click", () => {
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
-        });
-      });
 
       // 啟動程式
       init();
     </script>
+    <!-- 引用共用腳本 -->
+    <script src="js/common.js"></script>
+    <!-- 回到頂端按鈕 -->
   </body>
   <a
     href="https://github.com/vancetang/taiwan-office-calendar"
