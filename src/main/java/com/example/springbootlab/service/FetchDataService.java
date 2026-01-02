@@ -23,6 +23,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.BOMInputStream;
+import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
 
 import com.example.springbootlab.config.OpendataProperties;
@@ -105,13 +106,16 @@ public class FetchDataService {
                 try {
                     // 1. 讀取 JSON
                     List<Holiday> holidays = loadHolidaysFromJson(file);
-                    
+
+                    // 1.5. 處理軍人節 (9/3) - 將其設定為非假日
+                    processMilitaryDay(holidays);
+
                     // 2. 處理關聯節日
                     processRelatedHolidays(holidays);
-                    
+
                     // 3. 寫回 JSON
                     saveHolidaysToJson(file, holidays);
-                    
+
                     log.info("已更新檔案: {}", file.getFileName());
                 } catch (IOException e) {
                     log.error("處理檔案失敗: {}", file, e);
@@ -175,7 +179,8 @@ public class FetchDataService {
      */
     private List<Holiday> loadHolidaysFromJson(Path file) throws IOException {
         try (Reader reader = new InputStreamReader(new FileInputStream(file.toFile()), StandardCharsets.UTF_8)) {
-            return objectMapper.readValue(reader, new com.fasterxml.jackson.core.type.TypeReference<List<Holiday>>() {});
+            return objectMapper.readValue(reader, new com.fasterxml.jackson.core.type.TypeReference<List<Holiday>>() {
+            });
         }
     }
 
@@ -257,13 +262,24 @@ public class FetchDataService {
         // 從日期字串 (YYYYMMDD) 擷取年份
         String year = dateStr.substring(0, 4);
 
+        String name = record.get("name");
+        String holidayCategory = record.get("holidayCategory");
+        String description = record.get("description");
+        boolean isHoliday = YES_STRING.equals(record.get("isHoliday"));
+
+        // 軍人節 (9/3) 雖然是特定節日，但只有軍人才放假，一般民眾不放假
+        // 因此將 isHoliday 設定為 false
+        if (Strings.CS.endsWith(dateStr, "0903")) {
+            isHoliday = false;
+        }
+
         return Holiday.builder()
                 .date(dateStr)
                 .year(year)
-                .name(record.get("name"))
-                .isHoliday(YES_STRING.equals(record.get("isHoliday")))
-                .holidayCategory(record.get("holidayCategory"))
-                .description(record.get("description"))
+                .name(name)
+                .isHoliday(isHoliday)
+                .holidayCategory(holidayCategory)
+                .description(description)
                 .build();
     }
 
@@ -371,7 +387,9 @@ public class FetchDataService {
         } catch (IOException e) {
             log.warn("無法刪除暫存檔: {}", tempFile, e);
         }
-    }    /**
+    }
+
+    /**
      * 處理關聯節日資訊。
      * <p>
      * 針對補假、補上班等項目，嘗試從其他節日的說明中找出關聯。
@@ -434,9 +452,9 @@ public class FetchDataService {
             String dChi = toChineseNum(day);
 
             // 建構 Regex: (M|MM|中文) + 可能空白 + "月" + 可能空白 + (D|DD|中文) + 可能空白 + "日"
-            String regex = String.format("(%s|%s|%s)\\s*月\\s*(%s|%s|%s)\\s*日", 
+            String regex = String.format("(%s|%s|%s)\\s*月\\s*(%s|%s|%s)\\s*日",
                     mStr, mPad, mChi, dayStr, dPad, dChi);
-            
+
             return java.util.regex.Pattern.compile(regex);
         } catch (NumberFormatException e) {
             return null;
@@ -448,7 +466,8 @@ public class FetchDataService {
      */
     private void findAndLinkSourceHoliday(Holiday target, List<Holiday> yearList, java.util.regex.Pattern pattern) {
         for (Holiday source : yearList) {
-            if (source == target) continue;
+            if (source == target)
+                continue;
 
             String desc = source.getDescription();
             if (desc != null) {
@@ -470,7 +489,7 @@ public class FetchDataService {
      * @return 中文數字字串
      */
     private String toChineseNum(int num) {
-        final String[] chinese = {"", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"};
+        final String[] chinese = { "", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
         if (num <= 10) {
             return chinese[num];
         } else if (num < 20) {
@@ -481,5 +500,23 @@ public class FetchDataService {
             return "三十" + (num % 10 == 0 ? "" : chinese[num % 10]);
         }
         return String.valueOf(num);
+    }
+
+    /**
+     * 處理軍人節 (9/3)，將其設定為非假日。
+     *
+     * <p>
+     * 軍人節雖然是特定節日，但只有軍人才放假，一般民眾不放假，
+     * 因此需要將 isHoliday 設定為 false。
+     * </p>
+     *
+     * @param holidays 所有節日列表
+     */
+    private void processMilitaryDay(List<Holiday> holidays) {
+        for (Holiday holiday : holidays) {
+            if (Strings.CS.endsWith(holiday.getDate(), "0903")) {
+                holiday.setHoliday(false);
+            }
+        }
     }
 }

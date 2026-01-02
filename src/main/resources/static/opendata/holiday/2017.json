@@ -661,7 +661,7 @@
   "holidayCategory" : "特定節日",
   "description" : "軍人依國防部規定辦理。",
   "note" : null,
-  "holiday" : true
+  "holiday" : false
 }, {
   "date" : "20170909",
   "year" : "2017",
