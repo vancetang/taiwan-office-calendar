@@ -110,7 +110,9 @@
         let main = "";
         
         // 判斷主要顯示文字
-        if (!isHoliday) {
+        if (item.holidayCategory === "特殊節日") {
+          main = name;
+        } else if (!isHoliday) {
           main = "補上班日";
         } else if (isWeekend(date)) {
           main = name ? `周休(${name})` : "周休";

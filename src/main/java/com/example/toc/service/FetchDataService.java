@@ -268,9 +268,10 @@ public class FetchDataService {
         boolean isHoliday = YES_STRING.equals(record.get("isHoliday"));
 
         // 軍人節 (9/3) 雖然是特定節日，但只有軍人才放假，一般民眾不放假
-        // 因此將 isHoliday 設定為 false
+        // 因此將 isHoliday 設定為 false，並標記為特殊節日
         if (Strings.CS.endsWith(dateStr, "0903")) {
             isHoliday = false;
+            holidayCategory = "特殊節日";
         }
 
         return Holiday.builder()
@@ -516,6 +517,7 @@ public class FetchDataService {
         for (Holiday holiday : holidays) {
             if (Strings.CS.endsWith(holiday.getDate(), "0903")) {
                 holiday.setHoliday(false);
+                holiday.setHolidayCategory("特殊節日");
             }
         }
     }

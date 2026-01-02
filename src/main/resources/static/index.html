@@ -477,7 +477,10 @@
         let display = '';
         let type = 'holiday'; // holiday, workday, special
 
-        if (!isHoliday || category === '補行上班日') {
+        if (category === '特殊節日') {
+          display = name;
+          type = 'special';
+        } else if (!isHoliday || category === '補行上班日') {
           // 補班日
           display = name ? `補班(${name})` : '補班';
           type = 'workday';
