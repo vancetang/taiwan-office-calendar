@@ -145,7 +145,7 @@
               border: 1px solid var(--special);
             "
           ></div>
-          特殊節日
+          特定節日
         </div>
         <div class="legend-item" style="margin-left: auto; font-size: 14px; color: var(--text);">
           資料來源：<a href="https://data.taipei/" target="_blank">臺北市資料大平臺</a>
@@ -477,7 +477,7 @@
         let display = '';
         let type = 'holiday'; // holiday, workday, special
 
-        if (category === '特殊節日') {
+        if (category === '特定節日') {
           display = name;
           type = 'special';
         } else if (!isHoliday || category === '補行上班日') {
