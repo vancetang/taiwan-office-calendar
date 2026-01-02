@@ -5,7 +5,7 @@ server:
 
 spring:
   application:
-    name: spring-boot-lab
+    name: taiwan-office-calendar
   jackson:
     serialization:
       indent-output: true

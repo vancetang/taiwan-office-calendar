@@ -1,4 +1,4 @@
-package com.example.springbootlab.model;
+package com.example.toc.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * 對應政府開放資料平台的行政機關辦公日曆表資料結構。
  * </p>
  *
- * @author Spring Boot Lab
+ * @author Taiwan Office Calendar
  * @since 1.0.0
  */
 @Data

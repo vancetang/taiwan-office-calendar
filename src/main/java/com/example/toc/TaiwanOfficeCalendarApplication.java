@@ -1,4 +1,4 @@
-package com.example.springbootlab;
+package com.example.toc;
 
 import java.util.List;
 
@@ -15,20 +15,20 @@ import org.springframework.lang.NonNull;
 
 import org.springframework.cache.annotation.EnableCaching;
 
-import com.example.springbootlab.service.FetchDataService;
+import com.example.toc.service.FetchDataService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Spring Boot Lab 應用程式進入點。
+ * Taiwan Office Calendar 應用程式進入點。
  *
  * <p>
  * 實作 {@link ApplicationRunner} 以支援命令列參數解析，
  * 提供兩種執行模式：Server Mode 與 Task Mode。
  * </p>
  *
- * @author Spring Boot Lab
+ * @author Taiwan Office Calendar
  * @since 1.0.0
  */
 @Slf4j
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableCaching
-public class SpringBootLabApplication implements ApplicationRunner {
+public class TaiwanOfficeCalendarApplication implements ApplicationRunner {
 
     /** 資料抓取服務（建構子注入） */
     private final FetchDataService fetchDataService;
@@ -63,7 +63,7 @@ public class SpringBootLabApplication implements ApplicationRunner {
         // 在啟動 Context 之前檢查參數，決定是否啟動 Web 應用程式
         boolean isTaskMode = isTaskModeFromArgs(args);
 
-        ConfigurableApplicationContext context = new SpringApplicationBuilder(SpringBootLabApplication.class)
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(TaiwanOfficeCalendarApplication.class)
                 .web(isTaskMode ? WebApplicationType.NONE : WebApplicationType.SERVLET)
                 .run(args);
 
@@ -102,7 +102,7 @@ public class SpringBootLabApplication implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        log.info("Spring Boot Lab 環境初始化完成。");
+        log.info("Taiwan Office Calendar 環境初始化完成。");
 
         // 解析 job 參數
         String jobType = null;

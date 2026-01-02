@@ -1,4 +1,4 @@
-package com.example.springbootlab.service;
+package com.example.toc.service;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -26,8 +26,8 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
 
-import com.example.springbootlab.config.OpendataProperties;
-import com.example.springbootlab.model.Holiday;
+import com.example.toc.config.OpendataProperties;
+import com.example.toc.model.Holiday;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ol>
  * </p>
  *
- * @author Spring Boot Lab
+ * @author Taiwan Office Calendar
  * @since 1.0.0
  */
 @Slf4j

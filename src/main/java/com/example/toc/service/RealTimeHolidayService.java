@@ -1,4 +1,4 @@
-package com.example.springbootlab.service;
+package com.example.toc.service;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,8 +9,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import com.example.springbootlab.model.ncdr.NcdrEntry;
-import com.example.springbootlab.model.ncdr.NcdrHolidayResponse;
+import com.example.toc.model.ncdr.NcdrEntry;
+import com.example.toc.model.ncdr.NcdrHolidayResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;

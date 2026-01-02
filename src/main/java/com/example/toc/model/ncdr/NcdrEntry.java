@@ -1,4 +1,4 @@
-package com.example.springbootlab.model.ncdr;
+package com.example.toc.model.ncdr;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,4 +1,4 @@
-package com.example.springbootlab.service;
+package com.example.toc.service;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -8,8 +8,8 @@ import java.lang.reflect.Method;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.example.springbootlab.model.ncdr.NcdrEntry;
-import com.example.springbootlab.model.ncdr.NcdrSummary;
+import com.example.toc.model.ncdr.NcdrEntry;
+import com.example.toc.model.ncdr.NcdrSummary;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class RealTimeHolidayServiceTest {

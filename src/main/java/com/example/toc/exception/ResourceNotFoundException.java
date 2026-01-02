@@ -1,4 +1,4 @@
-package com.example.springbootlab.exception;
+package com.example.toc.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * 自動回應 HTTP 404 Not Found 狀態碼。
  * </p>
  *
- * @author Spring Boot Lab
+ * @author Taiwan Office Calendar
  * @since 1.0.0
  */
 @ResponseStatus(HttpStatus.NOT_FOUND)

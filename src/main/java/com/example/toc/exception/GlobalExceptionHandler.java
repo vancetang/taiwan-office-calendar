@@ -1,4 +1,4 @@
-package com.example.springbootlab.exception;
+package com.example.toc.exception;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 回傳一致的錯誤回應格式。
  * </p>
  *
- * @author Spring Boot Lab
+ * @author Taiwan Office Calendar
  * @since 1.0.0
  */
 @Slf4j

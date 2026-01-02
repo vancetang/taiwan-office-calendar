@@ -1,4 +1,4 @@
-package com.example.springbootlab.config;
+package com.example.toc.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

@@ -1,4 +1,4 @@
-package com.example.springbootlab.config;
+package com.example.toc.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  * 避免各處自行建立實例造成設定不一致。
  * </p>
  *
- * @author Spring Boot Lab
+ * @author Taiwan Office Calendar
  * @since 1.0.0
  */
 @Configuration

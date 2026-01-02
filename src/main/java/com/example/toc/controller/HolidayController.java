@@ -1,4 +1,4 @@
-package com.example.springbootlab.controller;
+package com.example.toc.controller;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springbootlab.config.OpendataProperties;
-import com.example.springbootlab.exception.ResourceNotFoundException;
-import com.example.springbootlab.model.Holiday;
-import com.example.springbootlab.model.ncdr.NcdrEntry;
-import com.example.springbootlab.service.RealTimeHolidayService;
+import com.example.toc.config.OpendataProperties;
+import com.example.toc.exception.ResourceNotFoundException;
+import com.example.toc.model.Holiday;
+import com.example.toc.model.ncdr.NcdrEntry;
+import com.example.toc.service.RealTimeHolidayService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  * 提供假日資料的查詢介面，資料來源為預先產生的 JSON 檔案。
  * </p>
  *
- * @author Spring Boot Lab
+ * @author Taiwan Office Calendar
  * @since 1.0.0
  */
 @Slf4j
