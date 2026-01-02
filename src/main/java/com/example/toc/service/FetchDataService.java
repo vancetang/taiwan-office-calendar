@@ -107,8 +107,8 @@ public class FetchDataService {
                     // 1. 讀取 JSON
                     List<Holiday> holidays = loadHolidaysFromJson(file);
 
-                    // 1.5. 處理軍人節 (9/3) - 將其設定為非假日
-                    processMilitaryDay(holidays);
+                    // 1.5. 處理特定節日 (9/3 軍人節, 6/15 警察節) - 將其設定為非假日
+                    processSpecialDays(holidays);
 
                     // 2. 處理關聯節日
                     processRelatedHolidays(holidays);
@@ -267,9 +267,9 @@ public class FetchDataService {
         String description = record.get("description");
         boolean isHoliday = YES_STRING.equals(record.get("isHoliday"));
 
-        // 軍人節 (9/3) 雖然是特定節日，但只有軍人才放假，一般民眾不放假
+        // 軍人節 (9/3) 與 警察節 (6/15) 雖然是特定節日，但只有特定人員才放假，一般民眾不放假
         // 因此將 isHoliday 設定為 false，並標記為特定節日
-        if (Strings.CS.endsWith(dateStr, "0903")) {
+        if (Strings.CS.endsWith(dateStr, "0903") || Strings.CS.endsWith(dateStr, "0615")) {
             isHoliday = false;
             holidayCategory = "特定節日";
         }
@@ -504,18 +504,18 @@ public class FetchDataService {
     }
 
     /**
-     * 處理軍人節 (9/3)，將其設定為非假日。
+     * 處理特定節日 (如軍人節、警察節)，將其設定為非假日。
      *
      * <p>
-     * 軍人節雖然是特定節日，但只有軍人才放假，一般民眾不放假，
+     * 這些節日雖然是特定節日，但只有特定身分才放假，一般民眾不放假，
      * 因此需要將 isHoliday 設定為 false。
      * </p>
      *
      * @param holidays 所有節日列表
      */
-    private void processMilitaryDay(List<Holiday> holidays) {
+    private void processSpecialDays(List<Holiday> holidays) {
         for (Holiday holiday : holidays) {
-            if (Strings.CS.endsWith(holiday.getDate(), "0903")) {
+            if (Strings.CS.endsWith(holiday.getDate(), "0903") || Strings.CS.endsWith(holiday.getDate(), "0615")) {
                 holiday.setHoliday(false);
                 holiday.setHolidayCategory("特定節日");
             }

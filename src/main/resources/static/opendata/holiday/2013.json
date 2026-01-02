@@ -474,10 +474,10 @@
   "date" : "20130615",
   "year" : "2013",
   "name" : "",
-  "holidayCategory" : "星期六、星期日",
+  "holidayCategory" : "特定節日",
   "description" : "",
   "note" : null,
-  "holiday" : true
+  "holiday" : false
 }, {
   "date" : "20130616",
   "year" : "2013",

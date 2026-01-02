@@ -469,7 +469,7 @@
   "holidayCategory" : "特定節日",
   "description" : "警察依內政部規定辦理。",
   "note" : null,
-  "holiday" : true
+  "holiday" : false
 }, {
   "date" : "20260619",
   "year" : "2026",

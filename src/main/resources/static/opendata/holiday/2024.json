@@ -458,10 +458,10 @@
   "date" : "20240615",
   "year" : "2024",
   "name" : "",
-  "holidayCategory" : "星期六、星期日",
+  "holidayCategory" : "特定節日",
   "description" : "",
   "note" : null,
-  "holiday" : true
+  "holiday" : false
 }, {
   "date" : "20240616",
   "year" : "2024",
