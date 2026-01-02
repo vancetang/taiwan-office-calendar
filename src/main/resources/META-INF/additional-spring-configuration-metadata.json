@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "opendata.holiday.url",
+      "type": "java.lang.String",
+      "description": "政府行政機關辦公日曆表開放資料 CSV 下載連結"
+    },
+    {
+      "name": "opendata.holiday.output-dir",
+      "type": "java.lang.String",
+      "description": "處理後之 JSON 檔案輸出目錄"
+    }
+  ]
+}
