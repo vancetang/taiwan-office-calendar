@@ -269,7 +269,7 @@ public class FetchDataService {
 
         // 軍人節 (9/3) 與 警察節 (6/15) 雖然是特定節日，但只有特定人員才放假，一般民眾不放假
         // 因此將 isHoliday 設定為 false，並標記為特定節日
-        if (Strings.CS.endsWith(dateStr, "0903") || Strings.CS.endsWith(dateStr, "0615")) {
+        if (isSpecialDay(dateStr)) {
             isHoliday = false;
             holidayCategory = "特定節日";
         }
@@ -504,6 +504,20 @@ public class FetchDataService {
     }
 
     /**
+     * 判斷是否為特定節日 (如軍人節、警察節)。
+     *
+     * <p>
+     * 這些節日雖然是特定節日，但只有特定身分才放假，一般民眾不放假。
+     * </p>
+     *
+     * @param dateStr 日期字串
+     * @return true 若為特定節日
+     */
+    private boolean isSpecialDay(String dateStr) {
+        return Strings.CS.endsWith(dateStr, "0903") || Strings.CS.endsWith(dateStr, "0615");
+    }
+
+    /**
      * 處理特定節日 (如軍人節、警察節)，將其設定為非假日。
      *
      * <p>
@@ -515,7 +529,7 @@ public class FetchDataService {
      */
     private void processSpecialDays(List<Holiday> holidays) {
         for (Holiday holiday : holidays) {
-            if (Strings.CS.endsWith(holiday.getDate(), "0903") || Strings.CS.endsWith(holiday.getDate(), "0615")) {
+            if (isSpecialDay(holiday.getDate())) {
                 holiday.setHoliday(false);
                 holiday.setHolidayCategory("特定節日");
             }
