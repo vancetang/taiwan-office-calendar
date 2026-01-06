@@ -30,9 +30,10 @@ trim_trailing_whitespace = false
 
 # 針對 Shell Script
 [*.sh]
+indent_size = 4
 end_of_line = lf
-indent_size = 2
 
 # 針對 Windows Batch Script
 [*.{cmd,bat,ps1}]
+indent_size = 4
 end_of_line = crlf
