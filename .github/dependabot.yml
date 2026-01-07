@@ -1,0 +1,22 @@
+#################################################################
+# Dependabot 設定檔 — 自動相依性更新設定
+#################################################################
+
+version: 2 # dependabot 配置版本
+updates:
+  - package-ecosystem: "maven" # Maven 相依性
+    directory: "/" # 掃描目錄
+    schedule:
+      interval: "weekly" # 每週檢查
+    open-pull-requests-limit: 5 # 同時開啟 PR 上限
+    labels: # PR 標籤
+      - "dependencies"
+      - "automated"
+    ignore:
+      - dependency-name: "*" # 忽略所有套件的 major 更新
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions" # GitHub Actions
+    directory: "/"
+    schedule:
+      interval: "monthly" # 每月檢查
