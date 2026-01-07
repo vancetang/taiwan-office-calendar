@@ -37,7 +37,7 @@ jobs:
 
             # 第三步：上傳 Artifact
             - name: Upload artifact
-              uses: actions/upload-pages-artifact@v3
+              uses: actions/upload-pages-artifact@v4
               with:
                   path: "./src/main/resources/static" # 指定 static 資料夾為發佈目錄
 
