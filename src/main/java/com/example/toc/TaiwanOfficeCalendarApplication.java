@@ -9,11 +9,10 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.SimpleCommandLinePropertySource;
 import org.springframework.lang.NonNull;
-
-import org.springframework.cache.annotation.EnableCaching;
 
 import com.example.toc.service.FetchDataService;
 
