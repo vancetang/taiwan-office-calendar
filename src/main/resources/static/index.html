@@ -53,24 +53,7 @@
             </div>
           </div>
         </div>
-        <!-- 卡片 3: 颱風假查詢 (點擊觸發) -->
-        <div
-          class="dashboard-card typhoon-check"
-          style="cursor: pointer"
-          onclick="checkTyphoonViaProxy()"
-        >
-          <div class="card-icon" style="background: #fff3e0; color: #ef6c00">
-            🌀
-          </div>
-          <div class="card-content">
-            <div class="card-title">即時停班停課</div>
-            <div class="card-desc" id="typhoonContent">
-              <span style="font-size: 14px; color: var(--primary)"
-                >點擊查詢台北市狀況</span
-              >
-            </div>
-          </div>
-        </div>
+
       </div>
 
       <!-- Header: 標題與導航 -->
@@ -82,6 +65,9 @@
           <select id="monthSelect"></select>
           <button class="nav-btn" id="nextMonth">下月 ▶</button>
           <button class="nav-btn primary" id="todayBtn">今天</button>
+          <button class="theme-toggle" id="themeToggle" aria-label="切換黑色模式">
+            <span class="theme-icon">🌙</span>
+          </button>
         </div>
         <div class="nav-links">
           <a href="simple.html" class="nav-link" id="linkSimple">📋 精簡版</a>
@@ -174,7 +160,8 @@
       let currentYear,
         currentMonth,
         holidayData = {}, // 快取已載入的假日資料
-        availableYears = []; // 可用的年份列表
+        availableYears = [], // 可用的年份列表
+        isDarkMode = false; // 黑色模式狀態
 
       // 初始化月份選單 (1-12月)
       for (let m = 1; m <= 12; m++) {
@@ -192,6 +179,10 @@
         const today = new Date();
         currentYear = today.getFullYear();
         currentMonth = today.getMonth() + 1;
+        
+        // 初始化黑色模式
+        initTheme();
+        
         try {
           // 加上時間戳記避免快取
           const res = await fetch(`${DATA_PATH}/years.json?t=${new Date().getTime()}`);
@@ -232,6 +223,38 @@
         } catch (e) {
           calendarGrid.innerHTML = `<div class="loading">載入失敗: ${e.message}</div>`;
           console.error(e);
+        }
+      }
+
+      /**
+       * 初始化黑色模式
+       * 從 localStorage 讀取設定，並套用相應的主題
+       */
+      function initTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        isDarkMode = savedTheme === 'dark' || (!savedTheme && prefersDark);
+        applyTheme();
+      }
+
+      /**
+       * 切換黑色模式
+       */
+      function toggleTheme() {
+        isDarkMode = !isDarkMode;
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        applyTheme();
+      }
+
+      /**
+       * 套用主題
+       */
+      function applyTheme() {
+        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        const themeIcon = document.querySelector('.theme-icon');
+        if (themeIcon) {
+          themeIcon.textContent = isDarkMode ? '☀️' : '🌙';
         }
       }
 
@@ -326,114 +349,6 @@
         ).innerText = `${progress.toFixed(1)}% - ${progressText}`;
       }
 
-      /**
-       * 透過 Proxy 檢查 NCDR 颱風假資訊 (GitHub Pages 適用)
-       * 使用 allorigins.win 作為 CORS Proxy 繞過瀏覽器限制。
-       * 
-       * 注意：此方法僅供靜態網站展示用，正式環境應使用後端 API。
-       */
-      async function checkTyphoonViaProxy() {
-        const content = document.getElementById('typhoonContent');
-        content.innerHTML =
-          '<span style="font-size: 14px; color: var(--text-light);">查詢中(Proxy)...</span>';
-
-        const targetUrl =
-          'https://alerts.ncdr.nat.gov.tw/JSONAtomFeed.ashx?AlertType=33';
-        const proxyUrl =
-          'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
-
-        try {
-          const res = await fetch(proxyUrl);
-          if (!res.ok) throw new Error('Proxy Fetch Error');
-
-          const rootData = await res.json();
-          // NCDR 原始結構通常是 { entry: [...] } 或 { entry: {...} } (單筆時)
-          // 需做正規化處理
-          let entries = [];
-          if (rootData && rootData.entry) {
-            if (Array.isArray(rootData.entry)) {
-              entries = rootData.entry;
-            } else {
-              entries = [rootData.entry];
-            }
-          }
-
-          // 前端重現後端過濾邏輯：鎖定台北市全區
-          const targetCity1 = '臺北市';
-          const targetCity2 = '台北市';
-
-          const filtered = entries.filter((entry) => {
-            if (!entry.summary || !entry.summary['#text']) return false;
-            const text = entry.summary['#text'];
-
-            // 1. 檢查是否包含目標城市
-            const hasCityName =
-              text.includes(targetCity1) || text.includes(targetCity2);
-            if (!hasCityName) return false;
-
-            // 2. 全區判斷邏輯 (檢查 "臺北市:" 或 "臺北市：")
-            const isAllArea1 =
-              text.includes(targetCity1 + ':') ||
-              text.includes(targetCity1 + '：');
-            const isAllArea2 =
-              text.includes(targetCity2 + ':') ||
-              text.includes(targetCity2 + '：');
-
-            return isAllArea1 || isAllArea2;
-          });
-
-          if (filtered.length > 0) {
-            // 有資料，顯示第一筆
-            const summary = filtered[0].summary['#text'];
-            let cleanText = summary
-              .replace(/\[.*?\]/g, '')
-              .replace(/行政院人事行政總處.*/, '');
-            content.innerHTML = `<span style="font-size: 13px; color: #c62828; font-weight: bold;">${cleanText}</span>`;
-          } else {
-            content.innerHTML =
-              '<span style="font-size: 14px; color: var(--workday);">目前無停班課資訊</span>';
-          }
-        } catch (e) {
-          console.error(e);
-          content.innerHTML =
-            '<span style="font-size: 12px; color: var(--text-light);">連線失敗</span>';
-        }
-      }
-
-      /**
-       * 透過後端 API 檢查颱風假資訊 (Server Mode 適用)
-       * (目前未在 UI 中直接呼叫，保留供參考)
-       */
-      async function checkTyphoon() {
-        const content = document.getElementById('typhoonContent');
-        content.innerHTML =
-          '<span style="font-size: 14px; color: var(--text-light);">查詢中...</span>';
-
-        try {
-          // 注意：這裡假設後端 API 已部署在 /api/holidays/realtime
-          // 若是靜態頁面直接開啟，此功能會因為跨域或找不到 API 而失敗
-          const res = await fetch('/api/holidays/realtime');
-          if (!res.ok) throw new Error('API Error');
-
-          const data = await res.json();
-          if (data && data.length > 0) {
-            // 有資料，顯示第一筆的 summary
-            const summary = data[0].summary['#text'];
-            // 簡化顯示：移除 [停班停課通知] 等前綴，只顯示重點
-            let cleanText = summary
-              .replace(/\[.*?\]/g, '')
-              .replace(/行政院人事行政總處.*/, '');
-            content.innerHTML = `<span style="font-size: 13px; color: #c62828; font-weight: bold;">${cleanText}</span>`;
-          } else {
-            content.innerHTML =
-              '<span style="font-size: 14px; color: var(--workday);">目前無停班課資訊</span>';
-          }
-        } catch (e) {
-          console.error(e);
-          content.innerHTML =
-            '<span style="font-size: 12px; color: var(--text-light);">無法連線至伺服器</span>';
-        }
-      }
 
       /**
        * 載入特定年份的資料
@@ -641,6 +556,7 @@
         await loadYear(currentYear);
         renderCalendar();
       };
+      document.getElementById('themeToggle').onclick = toggleTheme;
       yearSelect.onchange = async () => {
         currentYear = parseInt(yearSelect.value);
         updateLinks();
