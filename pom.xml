@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -11,7 +11,7 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>taiwan-office-calendar</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.1.0</version>
     <name>Taiwan Office Calendar</name>
     <description>Administrative Office Calendar for Taiwan Government (OpenData)</description>
     <properties>
@@ -21,7 +21,7 @@
         <commons.lang3.version>3.20.0</commons.lang3.version>
     </properties>
     <dependencies>
-        <!-- ================ Spring Boot 核心依賴 ================ -->
+        <!-- ================ Spring Boot ?詨?靘陷 ================ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -39,7 +39,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- ================ Spring Boot 開發與測試 ================ -->
+        <!-- ================ Spring Boot ??葫閰?================ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -52,7 +52,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ================ 工具庫 ================ -->
+        <!-- ================ 撌亙摨?================ -->
         <!-- Apache Commons -->
         <dependency>
             <groupId>commons-io</groupId>
@@ -76,7 +76,7 @@
             <version>${commons.lang3.version}</version>
         </dependency>
 
-        <!-- ================ 編譯時依賴 ================ -->
+        <!-- ================ 蝺刻陌??鞈?================ -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
