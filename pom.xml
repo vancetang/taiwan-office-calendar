@@ -11,7 +11,7 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>taiwan-office-calendar</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
     <name>Taiwan Office Calendar</name>
     <description>Administrative Office Calendar for Taiwan Government (OpenData)</description>
     <properties>
