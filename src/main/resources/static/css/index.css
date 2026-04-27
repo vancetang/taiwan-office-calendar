@@ -59,7 +59,9 @@
   font-size: 22px;
   font-weight: 400;
   color: var(--text);
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .header h1 span {
@@ -69,6 +71,8 @@
   padding: 4px 10px;
   border-radius: 12px;
   margin-left: 8px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 /* 控制按鈕區 */
@@ -88,6 +92,7 @@
   font-size: 14px;
   color: var(--text);
   transition: background 0.3s ease;
+  white-space: nowrap;
 }
 
 .nav-btn:hover {
@@ -396,8 +401,86 @@ select {
   .dashboard { grid-template-columns: 1fr; }
 }
 
+/* 平板斷點 */
 @media (max-width: 768px) {
   .day-cell { min-height: 60px; }
   .day-number { width: 24px; height: 24px; font-size: 12px; }
-  .header h1 { font-size: 18px; }
+
+  .header {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .header h1 {
+    font-size: 18px;
+    flex: 1 1 100%;
+  }
+
+  .controls {
+    flex: 1 1 auto;
+  }
+
+  .nav-links {
+    margin-left: 0;
+  }
+}
+
+/* 手機斷點 */
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+  }
+
+  .header {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .header h1 {
+    font-size: 16px;
+    flex: 1 1 100%;
+    text-align: center;
+  }
+
+  .header h1 span {
+    font-size: 12px;
+    padding: 2px 8px;
+    margin-left: 6px;
+  }
+
+  .controls {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .nav-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  select {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  .nav-links {
+    flex: 1 1 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+
+  .nav-link {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .legend {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .legend-item:last-child {
+    margin-left: 0;
+    flex: 1 1 100%;
+  }
 }
