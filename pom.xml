@@ -19,6 +19,8 @@
         <commons.io.version>2.22.0</commons.io.version>
         <commons.csv.version>1.14.1</commons.csv.version>
         <commons.lang3.version>3.20.0</commons.lang3.version>
+        <!-- 覆寫 Tomcat 版本以修補安全弱點 -->
+        <tomcat.version>10.1.55</tomcat.version>
     </properties>
     <dependencies>
         <!-- ================ Spring Boot 核心依賴 ================ -->
