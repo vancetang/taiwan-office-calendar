@@ -1,47 +1,51 @@
 name: Deploy to GitHub Pages
 
 on:
-    # 允許在 GitHub Actions 介面手動觸發
-    workflow_dispatch:
+  # 允許在 GitHub Actions 介面手動觸發
+  workflow_dispatch:
 
-    # 自動部署 (僅 docs/ 目錄)
-    push:
-        branches:
-            - main
-        paths:
-            - "src/main/resources/static/**"
+  # 自動部署 (僅 static 目錄變更時)
+  push:
+    branches:
+      - main
+    paths:
+      - "src/main/resources/static/**"
 
 permissions:
-    contents: read
-    pages: write
-    id-token: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-    group: "github-pages-deploy"
-    cancel-in-progress: false # 等待前次作業完成
+  group: "github-pages-deploy"
+  cancel-in-progress: false # 等待前次作業完成，避免部署衝突
 
 jobs:
-    deploy:
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-        runs-on: ubuntu-latest
-        steps:
-            # 第一步：檢出原始碼
-            - name: Checkout
-              uses: actions/checkout@v7
+  # 1. 建置與打包階段（無特殊部署權限，安全可靠）
+  build:
+    name: Prepare assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
 
-            # 第二步：配置 GitHub Pages 環境
-            - name: Setup Pages
-              uses: actions/configure-pages@v6
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
 
-            # 第三步：上傳 Artifact
-            - name: Upload artifact
-              uses: actions/upload-pages-artifact@v5
-              with:
-                  path: "./src/main/resources/static" # 指定 static 資料夾為發佈目錄
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: "./src/main/resources/static" # 指定 static 資料夾為發佈目錄
 
-            # 第四步：部署到 GitHub Pages
-            - name: Deploy to GitHub Pages
-              id: deployment
-              uses: actions/deploy-pages@v5
+  # 2. 部署階段（僅在 build 成功後執行，並限定在受保護的環境中）
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
