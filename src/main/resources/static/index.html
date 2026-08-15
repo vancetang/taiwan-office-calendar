@@ -210,11 +210,12 @@
           // 載入月曆顯示年份
           await loadYear(currentYear);
 
-          // 載入真實當前年份與明年 (為了 Dashboard 計算倒數)
+          // 載入真實當前年份與資料最新年份 (為了 Dashboard 計算倒數)
           const realYear = today.getFullYear();
           if (realYear !== currentYear) await loadYear(realYear);
-          if (availableYears.includes(String(realYear + 1))) {
-            await loadYear(realYear + 1);
+          const latestYear = parseInt(availableYears[0]);
+          if (latestYear !== currentYear && latestYear !== realYear) {
+            await loadYear(latestYear);
           }
 
           renderCalendar();
