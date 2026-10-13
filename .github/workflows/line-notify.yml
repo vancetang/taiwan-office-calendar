@@ -2,8 +2,8 @@ name: LINE Notify
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   - cron: '0 1 * * *'   # 需要定時發送時再取消註解（UTC 時間）
+  schedule:
+    - cron: "0 0 * * 1" # 每週一 08:00 台灣時間（UTC+8 → UTC 00:00）
 
 jobs:
   notify:
@@ -26,36 +26,38 @@ jobs:
             [ -f "$DATA_DIR/$y.json" ] && FILES+=("$DATA_DIR/$y.json")
           done
 
-          # 與 index.html renderDashboard() 相同：略過過去日期、非放假日、純週末；名稱空白時顯示「放假」
-          NEXT=$(jq -s -c --arg today "$TODAY" '
-            add
-            | map(select(.date >= $today and .holiday == true
-                and ((.holidayCategory // "") | test("^\\s*星期六、星期日\\s*$") | not)))
-            | first // empty
-            | {date, name: (if (.name // "") == "" then "放假" else .name end)}
-          ' "${FILES[@]}")
+          fmt() { echo "${1:0:4}/${1:4:2}/${1:6:2}"; }
 
-          if [ -z "$NEXT" ]; then
-            echo "找不到下一個假期，略過發送"
-            exit 1
-          fi
-
-          DATE=$(echo "$NEXT" | jq -r '.date')
-          NAME=$(echo "$NEXT" | jq -r '.name')
-          DAYS=$(( ( $(date -u -d "${DATE:0:4}-${DATE:4:2}-${DATE:6:2}" +%s) - $(date -u -d "${TODAY:0:4}-${TODAY:4:2}-${TODAY:6:2}" +%s) ) / 86400 ))
-
-          # 從下一個假期往前、往後連續走訪 holiday: true 的日期（含週末與補假），求出連假範圍
-          RANGE=$(jq -s -r --arg d "$DATE" '
+          # 連假：連續 3 天以上放假（含週末與補假，純週末 2 天不算），且連假開始日落在今天起 7 天內
+          RESULT=$(jq -s -c --arg today "$TODAY" '
             def prev: strptime("%Y%m%d") | mktime | . - 86400 | strftime("%Y%m%d");
             def next: strptime("%Y%m%d") | mktime | . + 86400 | strftime("%Y%m%d");
-            (add | map(select(.holiday == true) | {(.date): true}) | add) as $H
-            | ($d | until(($H[(prev)]) | not; prev)) as $start
-            | ($d | until(($H[(next)]) | not; next)) as $end
-            | "\($start) \($end)"
+            def plus($n): strptime("%Y%m%d") | mktime | . + 86400 * $n | strftime("%Y%m%d");
+            def days: strptime("%Y%m%d") | mktime / 86400 | floor;
+            add as $all
+            | ($all | map(select(.holiday == true) | {(.date): true}) | add) as $H
+            | ($all | map(select(.holiday == true) | .date) | unique) as $dates
+            | [ $dates[] as $s
+                | select(($H[($s | prev)] | not) and $s >= $today and $s <= ($today | plus(6)))
+                | ($s | until(($H[(next)]) | not; next)) as $e
+                | select((($e | days) - ($s | days)) + 1 >= 3)
+                | ($all | map(select(.holiday == true and .date >= $s and .date <= $e and (.name // "") != "")) | first) as $n
+                | {start: $s, end: $e, date: ($n.date // $s), name: ($n.name // "放假")}
+              ]
+            | first // empty
           ' "${FILES[@]}")
-          read -r START END <<< "$RANGE"
 
-          fmt() { echo "${1:0:4}/${1:4:2}/${1:6:2}"; }
+          if [ -z "$RESULT" ]; then
+            echo "今天起 7 天內無連假，略過發送"
+            exit 0
+          fi
+
+          START=$(echo "$RESULT" | jq -r '.start')
+          END=$(echo "$RESULT" | jq -r '.end')
+          DATE=$(echo "$RESULT" | jq -r '.date')
+          NAME=$(echo "$RESULT" | jq -r '.name')
+          DAYS=$(( ( $(date -u -d "${DATE:0:4}-${DATE:4:2}-${DATE:6:2}" +%s) - $(date -u -d "${TODAY:0:4}-${TODAY:4:2}-${TODAY:6:2}" +%s) ) / 86400 ))
+
           TEXT="【重要】距離放假 $(fmt "$START")~$(fmt "$END") (${NAME}) 還有 ${DAYS} 天，還不快規劃怎麼喝！"
           echo "發送內容：$TEXT"
 
