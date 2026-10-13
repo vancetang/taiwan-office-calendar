@@ -1,0 +1,58 @@
+name: LINE Notify
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 1 * * *'   # 需要定時發送時再取消註解（UTC 時間）
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Send LINE message
+        env:
+          LINE_TOKEN: ${{ secrets.LINE_MSG_TOKEN }}
+          LINE_TARGET_ID: ${{ secrets.LINE_TARGET_ID }}
+        run: |
+          DATA_DIR=src/main/resources/static/opendata/holiday
+          TODAY=$(TZ=Asia/Taipei date +%Y%m%d)
+          YEAR=${TODAY:0:4}
+
+          FILES=()
+          for y in "$YEAR" $((YEAR + 1)); do
+            [ -f "$DATA_DIR/$y.json" ] && FILES+=("$DATA_DIR/$y.json")
+          done
+
+          # 與 index.html renderDashboard() 相同：略過過去日期、非放假日、純週末；名稱空白時顯示「放假」
+          NEXT=$(jq -s -c --arg today "$TODAY" '
+            add
+            | map(select(.date >= $today and .holiday == true
+                and ((.holidayCategory // "") | test("^\\s*星期六、星期日\\s*$") | not)))
+            | first // empty
+            | {date, name: (if (.name // "") == "" then "放假" else .name end)}
+          ' "${FILES[@]}")
+
+          if [ -z "$NEXT" ]; then
+            echo "找不到下一個假期，略過發送"
+            exit 1
+          fi
+
+          DATE=$(echo "$NEXT" | jq -r '.date')
+          NAME=$(echo "$NEXT" | jq -r '.name')
+          DAYS=$(( ( $(date -u -d "${DATE:0:4}-${DATE:4:2}-${DATE:6:2}" +%s) - $(date -u -d "${TODAY:0:4}-${TODAY:4:2}-${TODAY:6:2}" +%s) ) / 86400 ))
+
+          TEXT="【重要】距離放假(${NAME})還有 ${DAYS} 天，還不快規劃怎麼喝！"
+          echo "發送內容：$TEXT"
+
+          BODY=$(jq -n \
+            --arg to "$LINE_TARGET_ID" \
+            --arg text "$TEXT" \
+            '{to: $to, messages: [{type: "text", text: $text}]}')
+
+          curl -sS --fail-with-body -X POST https://api.line.me/v2/bot/message/push \
+            -H "Authorization: Bearer $LINE_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$BODY"
