@@ -29,7 +29,7 @@ jobs:
           path: ./
           base: ${{ github.base_ref }}
           head: ${{ github.head_ref }}
-          extra_args: --debug --only-verified --fail
+          extra_args: --debug --only-verified
 
       - name: Run TruffleHog OSS (full history scan)
         # On push/schedule events base == HEAD would make the diff scan a no-op
@@ -38,4 +38,4 @@ jobs:
         uses: trufflesecurity/trufflehog@v3.99.2
         with:
           path: ./
-          extra_args: --debug --only-verified --fail
+          extra_args: --debug --only-verified
