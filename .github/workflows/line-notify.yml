@@ -22,7 +22,7 @@ jobs:
           YEAR=${TODAY:0:4}
 
           FILES=()
-          for y in "$YEAR" $((YEAR + 1)); do
+          for y in $((YEAR - 1)) "$YEAR" $((YEAR + 1)); do
             [ -f "$DATA_DIR/$y.json" ] && FILES+=("$DATA_DIR/$y.json")
           done
 
@@ -44,7 +44,19 @@ jobs:
           NAME=$(echo "$NEXT" | jq -r '.name')
           DAYS=$(( ( $(date -u -d "${DATE:0:4}-${DATE:4:2}-${DATE:6:2}" +%s) - $(date -u -d "${TODAY:0:4}-${TODAY:4:2}-${TODAY:6:2}" +%s) ) / 86400 ))
 
-          TEXT="【重要】距離放假(${NAME})還有 ${DAYS} 天，還不快規劃怎麼喝！"
+          # 從下一個假期往前、往後連續走訪 holiday: true 的日期（含週末與補假），求出連假範圍
+          RANGE=$(jq -s -r --arg d "$DATE" '
+            def prev: strptime("%Y%m%d") | mktime | . - 86400 | strftime("%Y%m%d");
+            def next: strptime("%Y%m%d") | mktime | . + 86400 | strftime("%Y%m%d");
+            (add | map(select(.holiday == true) | {(.date): true}) | add) as $H
+            | ($d | until(($H[(prev)]) | not; prev)) as $start
+            | ($d | until(($H[(next)]) | not; next)) as $end
+            | "\($start) \($end)"
+          ' "${FILES[@]}")
+          read -r START END <<< "$RANGE"
+
+          fmt() { echo "${1:0:4}/${1:4:2}/${1:6:2}"; }
+          TEXT="【重要】距離放假 $(fmt "$START")~$(fmt "$END") (${NAME}) 還有 ${DAYS} 天，還不快規劃怎麼喝！"
           echo "發送內容：$TEXT"
 
           BODY=$(jq -n \
