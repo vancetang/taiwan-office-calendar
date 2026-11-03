@@ -24,7 +24,7 @@ jobs:
 
       - name: Run TruffleHog OSS (PR diff scan)
         if: github.event_name == 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.99.2
+        uses: trufflesecurity/trufflehog@v3.99.7
         with:
           path: ./
           base: ${{ github.base_ref }}
@@ -35,7 +35,7 @@ jobs:
         # On push/schedule events base == HEAD would make the diff scan a no-op
         # error, so scan the full repository history instead.
         if: github.event_name != 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.99.2
+        uses: trufflesecurity/trufflehog@v3.99.7
         with:
           path: ./
           extra_args: --debug --only-verified
